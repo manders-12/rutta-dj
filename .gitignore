@@ -2,3 +2,5 @@
 /rutta-dj/*
 /src/db/*
 /src/__pycache__/*
+runtime.txt
+procfile
