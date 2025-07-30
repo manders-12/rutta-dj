@@ -1,0 +1,1 @@
+Rating and Recommendation Archival Bot for Discord
