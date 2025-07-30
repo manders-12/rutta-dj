@@ -90,3 +90,35 @@ class DBConnector:
             SELECT * FROM ratings WHERE recommended_by = ?
         ''', (recommended_by,))
         return cursor.fetchall()
+    
+    def get_recommendations_by_genre(self, genre):
+        conn = self.connect()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT * FROM recommendations WHERE genre = ?
+        ''', (genre,))
+        return cursor.fetchall()
+
+    def get_recommendations_by_tag(self, tag):
+        conn = self.connect()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT * FROM recommendations WHERE tag = ?
+        ''', (tag,))
+        return cursor.fetchall()
+    
+    def get_all_genres(self):
+        conn = self.connect()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT DISTINCT genre FROM recommendations
+        ''')
+        return [row['genre'] for row in cursor.fetchall()]
+
+    def get_all_tags(self):
+        conn = self.connect()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT DISTINCT tag FROM recommendations
+        ''')
+        return [row['tag'] for row in cursor.fetchall()]

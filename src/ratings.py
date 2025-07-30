@@ -1,7 +1,7 @@
 import discord
 from discord.ui import View, Button
 
-class StartView(View):
+class RatingsStartView(View):
     def __init__(self, db):
         super().__init__()
         self.db = db  
@@ -18,7 +18,7 @@ class StartView(View):
     @discord.ui.button(label="Recommended By", style=discord.ButtonStyle.primary, custom_id="recommended")
     async def recommended_callback(self, interaction: discord.Interaction, button: Button):
         await interaction.response.edit_message(
-            content="Select a recommendation:", view=RecView(db=self.db)
+            content="View Songs Recommended By:", view=RecView(db=self.db)
         )
     
 class RatingsView(View):
@@ -26,16 +26,17 @@ class RatingsView(View):
         super().__init__()
         self.db = db
         for i in range(1, 11):
-            self.add_item(RatingButton(i, db))
-        self.add_item(RatingsBackButton(db))
+            row = (i - 1) // 5  # Calculate row number based on index
+            self.add_item(RatingButton(i, db, row))
+        self.add_item(RatingsBackButton(db, ((i+1)//5)+1))
 
 class RatingsBackButton(Button):
-    def __init__(self, db):
-        super().__init__(label="Back", style=discord.ButtonStyle.danger, custom_id="back_ratings")
+    def __init__(self, db, row):
+        super().__init__(label="Back", style=discord.ButtonStyle.danger, custom_id="back_ratings", row = row)
         self.db = db
 
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.edit_message(view=StartView(self.db))
+        await interaction.response.edit_message(content = "View Reviews By:", view=RatingsStartView(self.db))
     
 
 class RecView(View):
@@ -45,19 +46,19 @@ class RecView(View):
         # Add buttons or other UI elements for recommendations here
         recommended_by = db.get_all_recommended_by()
         for i, name in enumerate(recommended_by):
-            self.add_item(RecButton(name, db))
-        self.add_item(RecBackButton(db))
+            self.add_item(RecButton(name, db, i))
+        self.add_item(RecBackButton(db, i+1))
 
 class RecBackButton(Button):
-    def __init__(self, db):
-        super().__init__(label="Back", style=discord.ButtonStyle.danger, custom_id="back_rec")
+    def __init__(self, db, row):
+        super().__init__(label="Back", style=discord.ButtonStyle.danger, custom_id="back_rec", row = row)
         self.db = db
 
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.edit_message(view=StartView(self.db))
+        await interaction.response.edit_message(content = "View Reviews By:", view=RatingsStartView(self.db))
 
 #old shitty malformed table builder
-#def build_embed_table(results):
+#def _build_embed_table(results):
 #    embed = discord.Embed(title="Results", description="Here are the results:", color=discord.Color.blue())
 #    ratings = [result['rating'] for result in results]
 #    names = [result['track_name'] for result in results]
@@ -70,7 +71,7 @@ class RecBackButton(Button):
 #    embed.set_footer(text="Click 'Close' to dismiss this message.")
 #    return embed
 
-def build_embed_table(results):
+def _build_embed_table(results):
     embed = discord.Embed(title="Results", color=discord.Color.blue())
     for result in results:
         embed.add_field(name=result['track_name'], value=f"Rating: {result['rating']}\nReview: {result['review']}\nRecommended By: {result['recommended_by']}", inline=False)
@@ -78,29 +79,29 @@ def build_embed_table(results):
     return embed
     
 class RecButton(Button):
-    def __init__(self, name: str, db):
-        super().__init__(label=name, style=discord.ButtonStyle.secondary)
+    def __init__(self, name: str, db, row):
+        super().__init__(label=name, style=discord.ButtonStyle.secondary, row=row)
         self.db = db
         self.name = name
 
     async def callback(self, interaction: discord.Interaction):
         results = self.db.get_tracks_by_recommended_by(self.name)
         if results:
-            embed = build_embed_table(results)
+            embed = _build_embed_table(results)
             await interaction.response.edit_message(content = None, embed = embed, view=ResultsTable())
         else:
             await interaction.response.send_message(f"No tracks found recommended by {self.name}.", ephemeral=True)
 
 class RatingButton(Button):
-    def __init__(self, value: int, db):
-        super().__init__(label=str(value), style=discord.ButtonStyle.secondary)
+    def __init__(self, value: int, db, row):
+        super().__init__(label=str(value), style=discord.ButtonStyle.secondary, row = row)
         self.db = db
         self.value = value
 
     async def callback(self, interaction: discord.Interaction):
         results = self.db.get_tracks_by_rating(self.value)
         if results:
-            embed = build_embed_table(results)
+            embed = _build_embed_table(results)
             await interaction.response.edit_message(content = None, embed = embed, view=ResultsTable())
         else:
             await interaction.response.send_message(f"No tracks found with rating {self.value}.", ephemeral=True)

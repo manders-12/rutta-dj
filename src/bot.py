@@ -5,7 +5,8 @@ import os
 from dotenv import load_dotenv
 from datetime import datetime, timezone
 from db_connector import DBConnector
-from ratings import StartView
+from ratings import RatingsStartView
+from recommendations import RecommendationsStartView
 from discord.ext import commands
 import time
 import json
@@ -240,11 +241,20 @@ async def process(ctx):
 @client.command()
 async def ratings(ctx):
     logging.info(f'Received request to show ratings')
-    view = StartView(db=db)
+    view = RatingsStartView(db=db)
     try:
         await ctx.send("View Reviews By:", view=view)
     except Exception as e:
         logging.error(f'Error sending ratings view: {e}')
+
+@client.command()
+async def recommendations(ctx):
+    logging.info(f'Received request to show recommendations')
+    view = RecommendationsStartView(db=db)
+    try:
+        await ctx.send("View Recommendations By:", view=view)
+    except Exception as e:
+        logging.error(f'Error sending recommendations view: {e}')
 
 @client.event
 async def on_message(message):
