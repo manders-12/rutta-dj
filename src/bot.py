@@ -10,13 +10,22 @@ from discord.ext import commands
 import time
 import json
 
+# Set up logging
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO, datefmt='%Y-%m-%d %H:%M:%S')
+logger = logging.getLogger('discord')
+logger.setLevel(logging.INFO)
+
 # Load environment variables - don't forget to configure .env for production
 if os.path.exists('.env'):
     load_dotenv()
     environment = os.getenv('ENVIRONMENT', 'development')
 
-if environment == 'production': vars = json.load(open('config/prod.json'))
-else: vars = json.load(open('config/dev.json'))
+if environment == 'production':
+    logging.info('Running in production mode') 
+    vars = json.load(open('config/prod.json'))]
+else: 
+    vars = json.load(open('config/dev.json'))
+    logging.info('Running in development mode')
 
 # Set up configuration variables
 # These can be overridden by environment variables for flexibility
@@ -29,12 +38,6 @@ CONTROLLING_USER = vars.get('controlling_user', 'longliveHIM').lower()
 #MUSIC_REVIEW_CHANNEL = os.getenv('MUSIC_REVIEW_CHANNEL', 'test-music-review')
 # The username to match for recommendations and ratings
 #CONTROLLING_USER = os.getenv('CONTROLLING_USER', 'longliveHIM').lower()
-
-
-# Set up logging
-logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO, datefmt='%Y-%m-%d %H:%M:%S')
-logger = logging.getLogger('discord')
-logger.setLevel(logging.INFO)
 
 # Set up Discord client with intents
 # Enable message content intent to read message content
