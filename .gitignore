@@ -1,3 +1,4 @@
 .env
 /rutta-dj/*
 /db/*
+/__pycache__/*
