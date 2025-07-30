@@ -22,7 +22,7 @@ if os.path.exists('.env'):
 
 if environment == 'production':
     logging.info('Running in production mode') 
-    vars = json.load(open('config/prod.json'))]
+    vars = json.load(open('config/prod.json'))
 else: 
     vars = json.load(open('config/dev.json'))
     logging.info('Running in development mode')
