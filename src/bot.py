@@ -8,15 +8,27 @@ from db_connector import DBConnector
 from ratings import StartView
 from discord.ext import commands
 import time
+import json
 
 # Load environment variables - don't forget to configure .env for production
 if os.path.exists('.env'):
     load_dotenv()
-    # Channel names to watch
-    TRACK_LIST_CHANNEL = os.getenv('TRACK_LIST_CHANNEL', 'test-track-list')
-    MUSIC_REVIEW_CHANNEL = os.getenv('MUSIC_REVIEW_CHANNEL', 'test-music-review')
-    # The username to match for recommendations and ratings
-    RUTTA_USERNAME = os.getenv('RUTTA_USERNAME', 'longliveHIM').lower()
+    environment = os.getenv('ENVIRONMENT', 'development')
+
+if environment == 'production': vars = json.load(open('config/prod.json'))
+else: vars = json.load(open('config/dev.json'))
+
+# Set up configuration variables
+# These can be overridden by environment variables for flexibility
+TRACK_LIST_CHANNEL = vars.get('track_list_channel', 'test-track-list')
+MUSIC_REVIEW_CHANNEL = vars.get('music_review_channel', 'test-music-review')
+CONTROLLING_USER = vars.get('controlling_user', 'longliveHIM').lower()
+
+# Channel names to watch
+#TRACK_LIST_CHANNEL = os.getenv('TRACK_LIST_CHANNEL', 'test-track-list')
+#MUSIC_REVIEW_CHANNEL = os.getenv('MUSIC_REVIEW_CHANNEL', 'test-music-review')
+# The username to match for recommendations and ratings
+#CONTROLLING_USER = os.getenv('CONTROLLING_USER', 'longliveHIM').lower()
 
 
 # Set up logging
@@ -123,7 +135,7 @@ async def process_message(message):
     if message.channel.name == TRACK_LIST_CHANNEL:
         logging.info(f'Received message from {message.author.global_name} in {TRACK_LIST_CHANNEL}: {message.content}')
         # Only process messages from Rutta
-        if str(message.author.global_name).lower() == RUTTA_USERNAME:
+        if str(message.author.global_name).lower() == CONTROLLING_USER:
             # Expecting format:
             # Genre - Tag\nhttps://www.youtube.com/watch?v=4hz68I4BRMA
             if message.embeds:
@@ -157,7 +169,7 @@ async def process_message(message):
     elif message.channel.name == MUSIC_REVIEW_CHANNEL:
         # If Rutta is rating a track, he should be replying to a message with the song link
         # This assumes that the embed is in the replied message and has already been generated. Might break if embed isn't generated or there's a lot of lag
-        if str(message.author.global_name).lower() == RUTTA_USERNAME and message.reference:
+        if str(message.author.global_name).lower() == CONTROLLING_USER and message.reference:
             try:
                 replied_message = await message.channel.fetch_message(message.reference.message_id)
             except Exception as e:
@@ -243,7 +255,7 @@ async def on_message_edit(before, after):
 
     # Only process messages in the relevant channels
     logging.info(f'Received edited message in {after.channel.name}: {after.content}')
-    if after.channel.name == TRACK_LIST_CHANNEL and len(before.embeds) == 0 and len(after.embeds) > 0 and str(after.author.global_name).lower() == RUTTA_USERNAME:
+    if after.channel.name == TRACK_LIST_CHANNEL and len(before.embeds) == 0 and len(after.embeds) > 0 and str(after.author.global_name).lower() == CONTROLLING_USER:
         genre, tag = parse_recommendation(after.content)
         title, author, link = parse_embed(after.embeds[0])
         if genre and tag and title and author and link:
@@ -256,5 +268,8 @@ async def on_message_edit(before, after):
                 logging.error(f'Error inserting recommendation on edit: {e}')
 
 
-
-client.run(os.getenv('DISCORD_TOKEN', 'PUT YOUR TOKEN IN THE ENV FILE YOU DUMB IDIOT DUMMY'))
+try:
+    client.run(os.getenv('DISCORD_TOKEN', 'PUT YOUR TOKEN IN THE ENV FILE YOU DUMB IDIOT DUMMY'))
+    logging.info('Bot Is Running.')
+except discord.LoginFailure as e:
+    logging.error(f'Bot Login Failure: {e}')
