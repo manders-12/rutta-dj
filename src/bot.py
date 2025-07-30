@@ -26,9 +26,11 @@ else:
     environment = os.environ.get('ENVIRONMENT', 'development')
 
 if environment == 'production':
+    db_path = 'db/rutta-dj-prod.sqlite3'
     logging.info('Running in production mode')
     vars = json.load(open('config/prod.json'))
 else:
+    db_path = 'db/rutta-dj-dev.sqlite3'
     vars = json.load(open('config/dev.json'))
     logging.info('Running in development mode')
 
@@ -56,7 +58,7 @@ client = commands.Bot(command_prefix=commands.when_mentioned, intents=intents)
 
 # Set up DB connection
 try:
-    db = DBConnector('db/rutta-dj.sqlite3')
+    db = DBConnector(db_path)
     db.create_tables()
     logging.info('Database connection established and tables created.')
 except Exception as e:
