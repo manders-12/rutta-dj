@@ -72,6 +72,7 @@ def extract_link(text):
 
 
 def parse_rating(text):
+    rating, explanation = None, None
     try:
         lines = text.split('\n')
         reviewI = None
@@ -166,7 +167,8 @@ async def process_message(message):
                 embed = None
                 genre, tag = parse_recommendation(message.content)
                 title, author, link = parse_embed(message.embeds[0])
-                if genre and tag and title and author:
+                if genre and tag and title:
+                    if not author: author = 'Unknown'
                     try:
                         db.insert_recommendation(message.id, author, title,
                                                  link, genre, tag)
@@ -195,6 +197,9 @@ async def process_message(message):
                         await message.channel.send(embed=embed)
                     if (embed.title == 'Error'): return False
                     else: return True
+                else:
+                    logging.error(f'Failed to parse recommendation: {message.content}')
+                    return False
             else:
                 logging.info(
                     f'No embeds found in message: {message.content}. Waiting for edit.'
@@ -206,21 +211,23 @@ async def process_message(message):
     elif message.channel.name == MUSIC_REVIEW_CHANNEL:
         # If Rutta is rating a track, he should be replying to a message with the song link
         # This assumes that the embed is in the replied message and has already been generated. Might break if embed isn't generated or there's a lot of lag
-        if str(message.author.global_name).lower(
-        ) == CONTROLLING_USER and message.reference:
+        if str(message.author.global_name).lower() == CONTROLLING_USER and message.reference:
             try:
-                replied_message = await message.channel.fetch_message(
-                    message.reference.message_id)
+                replied_message = await message.channel.fetch_message(message.reference.message_id)
             except Exception as e:
                 replied_message = None
                 logging.warning(
                     f'Could not fetch replied message: {message.reference.message_id}. Error: {e}'
                 )
+                return False
             if replied_message:
                 recommended_by = replied_message.author.global_name if replied_message.author else 'Unknown'
-                title, author, link = parse_embed(replied_message.embeds[0])
+                title, author, link = None, None, None
+                if replied_message.embeds:
+                    title, author, link = parse_embed(replied_message.embeds[0])
                 rating, explanation = parse_rating(message.content)
-                if title and author and link and rating is not None:
+                if title and link and rating is not None:
+                    if not author: author = 'Unknown'
                     try:
                         db.insert_rating(message.id, recommended_by, title,
                                          link, rating, explanation)
@@ -233,11 +240,21 @@ async def process_message(message):
                         embed = discord.Embed(
                             title='Error',
                             description='Failed to insert rating.')
-                        logging.error(f'Error inserting rating: {e}')
+                        logging.error(f'Error inserting rating: {e}. Title: {title}, Author: {author}, Link: {link}, Rating: {rating}, Explanation: {explanation}')
+                        return False
                     curr_time = datetime.now(timezone.utc)
                     diff = curr_time - message.created_at
                     if diff.total_seconds() < 360:
                         await message.channel.send(embed=embed)
+                    return True
+                else:
+                    logging.error(f'Failed to parse rating: {message.content}. Title: {title}, Author: {author}, Link: {link}, Rating: {rating}')
+                    return False
+        elif str(message.author.global_name).lower() == CONTROLLING_USER:
+            logging.error(
+                f'No embeds found in replied message: {message.content}'
+            )
+            return False
 
 
 @client.event
@@ -246,7 +263,7 @@ async def on_ready():
 
 
 @client.command()
-@commands.has_permissions(administrator=True)
+#@commands.has_permissions(administrator=True)
 async def process(ctx):
     logging.info(f'Received request to process history')
 
