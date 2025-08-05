@@ -6,6 +6,7 @@ def extract_link(text):
     return match.group(1) if match else None
 
 def parse_rating(text):
+    rating, explanation = None, None
     try:
         lines = text.split('\n')
         reviewI = None
