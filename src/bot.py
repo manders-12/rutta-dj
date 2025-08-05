@@ -4,9 +4,10 @@ import logging
 import os
 from dotenv import load_dotenv
 from datetime import datetime, timezone
-from db_connector import DBConnector
-from ratings import RatingsStartView
-from recommendations import RecommendationsStartView
+from db.db_connector import DBConnector
+from views.ratings import RatingsStartView
+from views.recommendations import RecommendationsStartView
+from helpers.messages import *
 from discord.ext import commands
 import time
 import json
@@ -38,12 +39,6 @@ TRACK_LIST_CHANNEL = vars.get('track_list_channel', 'test-track-list')
 MUSIC_REVIEW_CHANNEL = vars.get('music_review_channel', 'test-music-review')
 CONTROLLING_USER = vars.get('controlling_user', 'longliveHIM').lower()
 
-# Channel names to watch
-#TRACK_LIST_CHANNEL = os.getenv('TRACK_LIST_CHANNEL', 'test-track-list')
-#MUSIC_REVIEW_CHANNEL = os.getenv('MUSIC_REVIEW_CHANNEL', 'test-music-review')
-# The username to match for recommendations and ratings
-#CONTROLLING_USER = os.getenv('CONTROLLING_USER', 'longliveHIM').lower()
-
 # Set up Discord client with intents
 # Enable message content intent to read message content
 intents = discord.Intents.default()
@@ -52,7 +47,6 @@ intents.messages = True
 intents.members = True
 
 client = commands.Bot(command_prefix=commands.when_mentioned, intents=intents)
-#client = discord.Client(intents=intents)
 
 # Set up DB connection
 try:
@@ -64,51 +58,51 @@ except Exception as e:
     raise
 
 
-def extract_link(text):
-    match = re.search(r'(https?://\S+)', text)
-    return match.group(1) if match else None
+# def extract_link(text):
+#     match = re.search(r'(https?://\S+)', text)
+#     return match.group(1) if match else None
 
 
-def parse_rating(text):
-    try:
-        lines = text.split('\n')
-        reviewI = None
-        for i, line in enumerate(lines):
-            parts = line.split('-')
-            if len(parts) > 1 and parts[-1].strip().isdigit():
-                rating = parts[-1].strip()
-                reviewI = i + 1
-                break
-        if reviewI is not None and reviewI < len(lines):
-            explanation = '\n'.join(lines[reviewI:]).strip()
-    except Exception as e:
-        logging.error(f'Error parsing rating: {e}')
-        rating, explanation = None, None
-    return rating, explanation
+# def parse_rating(text):
+#     try:
+#         lines = text.split('\n')
+#         reviewI = None
+#         for i, line in enumerate(lines):
+#             parts = line.split('-')
+#             if len(parts) > 1 and parts[-1].strip().isdigit():
+#                 rating = parts[-1].strip()
+#                 reviewI = i + 1
+#                 break
+#         if reviewI is not None and reviewI < len(lines):
+#             explanation = '\n'.join(lines[reviewI:]).strip()
+#     except Exception as e:
+#         logging.error(f'Error parsing rating: {e}')
+#         rating, explanation = None, None
+#     return rating, explanation
 
 
-def parse_recommendation(text):
-    try:
-        lines = text.split('\n')
-        parts = lines[0].split('-')
-        tag = parts[-1].strip()
-        genre = "-".join(parts[0:-1]).strip()
-    except Exception as e:
-        logging.error(f'Error parsing recommendation: {e}')
-        genre, tag = None, None
-    return genre, tag
+# def parse_recommendation(text):
+#     try:
+#         lines = text.split('\n')
+#         parts = lines[0].split('-')
+#         tag = parts[-1].strip()
+#         genre = "-".join(parts[0:-1]).strip()
+#     except Exception as e:
+#         logging.error(f'Error parsing recommendation: {e}')
+#         genre, tag = None, None
+#     return genre, tag
 
 
-def parse_embed(embed):
-    try:
-        title = embed.title if embed.title else ''
-        author = embed.author.name if embed.author else ''
-        author = author.rstrip(' - Topic')
-        link = embed.url if hasattr(embed, 'url') else None
-    except Exception as e:
-        logging.error(f'Error parsing embed: {e}')
-        title, author, link = None, None, None
-    return title, author, link
+# def parse_embed(embed):
+#     try:
+#         title = embed.title if embed.title else ''
+#         author = embed.author.name if embed.author else ''
+#         author = author.rstrip(' - Topic')
+#         link = embed.url if hasattr(embed, 'url') else None
+#     except Exception as e:
+#         logging.error(f'Error parsing embed: {e}')
+#         title, author, link = None, None, None
+#     return title, author, link
 
 
 def create_rating_embed(title, author, link, rating, explanation):
