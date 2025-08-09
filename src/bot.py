@@ -124,12 +124,17 @@ async def process_track_list_message(message):
             return False
         genres = re.findall(r'<@&\d+>', genre_tag_line[0])
         if not genres:
-            genres = [genre_tag_line[0].strip(), None]
+            genres = genre_tag_line[0].strip().split(' ')
+        if len(genres) < 2:
+            genres.append(None)  # Ensure we have at least two genres
         tag = genre_tag_line[-1].strip()
         
         if message.embeds:
             embed = message.embeds[0]
             title, author, link = parse_embed(embed)
+        else:
+            logging.error(f'Message {message.content} does not contain an embed.')
+            return False
         
         if not title or not link or not author:
             logging.error(f'Missing title, link, or author in message: {text}')

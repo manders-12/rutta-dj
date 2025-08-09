@@ -54,7 +54,7 @@ class DBConnector:
         cursor = conn.cursor()
         cursor.execute('''
             INSERT INTO recommendations (message_id, title, author, link, genre1, genre2, tag)
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         ''', (message_id, title, author, link, genres[0], genres[1], tag))
         conn.commit()
 
