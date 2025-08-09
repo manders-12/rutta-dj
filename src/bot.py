@@ -182,6 +182,8 @@ async def process_music_review_message(message):
             logging.error(f'Missing link in replied message: {replied_message.content}')
             return False
         if not author:
+            author = get_artist_from_spotify_link(link)
+        if not author:
             logging.error(f'Missing author in replied message: {replied_message.content}')
             return False
         
@@ -210,6 +212,8 @@ async def process_music_review_message(message):
             if not rating or not explanation:
                 logging.error(f'Missing rating or explanation in message: {message.content}')
                 return False
+            #If it's an album the title might start with Track 1 - track_name. We want to strip the Track [Integer] - part
+            track_name = re.sub(r'^Track \d+ - ', '', track_name.strip())
             unique_id = f"{message.id}-{idx}" if len(tracks_to_process) > 1 else message.id
             db.insert_rating(unique_id, replied_message.author.global_name, track_name, link, rating, explanation)
             embed = create_rating_embed(track_name, author, link, rating, explanation)
