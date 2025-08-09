@@ -36,12 +36,12 @@ class GenreView(View):
         self.db = db
         genres = db.get_all_genres()
         for i, genre in enumerate(genres):
-            self.add_item(GenreButton(genre, db, i))
-        self.add_item(GenreBackButton(db, len(genres) + 1))
+            self.add_item(GenreButton(genre, db))
+        self.add_item(GenreBackButton(db, 1))
 
 class GenreButton(Button):
-    def __init__(self, genre, db, row):
-        super().__init__(label=genre, style=discord.ButtonStyle.primary, custom_id=f"genre_{genre}", row=row)
+    def __init__(self, genre, db):
+        super().__init__(label=genre, style=discord.ButtonStyle.primary, custom_id=f"genre_{genre}")
         self.db = db
         self.genre = genre
 
@@ -66,8 +66,8 @@ class TagView(View):
         self.db = db
         tags = db.get_all_tags()
         for i, tag in enumerate(tags):
-            self.add_item(TagButton(tag, db, i))
-        self.add_item(TagBackButton(db, len(tags) + 1))
+            self.add_item(TagButton(tag, db, 0))
+        self.add_item(TagBackButton(db, 1))
 
 class TagButton(Button):
     def __init__(self, tag, db, row):

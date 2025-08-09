@@ -70,7 +70,7 @@ class RecView(View):
         self.db = db
         recommended_by = db.get_all_recommended_by()
         for i, name in enumerate(recommended_by):
-            self.add_item(RecButton(name, db, i))
+            self.add_item(RecButton(name, db))
         self.add_item(
             BackButton(db, i + 1, RatingsStartView(db), "View Reviews By:"))
 
@@ -100,10 +100,9 @@ class RecView(View):
 
 class RecButton(Button):
 
-    def __init__(self, name: str, db, row):
+    def __init__(self, name: str, db):
         super().__init__(label=name,
-                         style=discord.ButtonStyle.secondary,
-                         row=row)
+                         style=discord.ButtonStyle.secondary)
         self.db = db
         self.name = name
 
