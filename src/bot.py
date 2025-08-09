@@ -357,7 +357,7 @@ async def process(ctx):
         # Process messages in batches to avoid memory issues
         for channel in channels:
             logging.info(f'Starting historical processing in {channel}')
-            async for message in channel.history(limit=1000, oldest_first=True):
+            async for message in channel.history(limit=100000, oldest_first=True):
                 if await process_message(message):
                     processed_count += 1
                 else:
