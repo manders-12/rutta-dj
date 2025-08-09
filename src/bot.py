@@ -8,6 +8,7 @@ from db.db_connector import DBConnector
 from views.ratings import RatingsStartView
 from views.recommendations import RecommendationsStartView
 from helpers.messages import *
+from helpers.spotify import get_artist_from_spotify_link
 from discord.ext import commands
 import time
 import json
@@ -135,7 +136,6 @@ async def process_track_list_message(message):
         else:
             logging.error(f'Message {message.content} does not contain an embed.')
             return False
-        
         if not title:
             logging.error(f'Missing title in replied message: {message.content}')
             return False
@@ -143,8 +143,9 @@ async def process_track_list_message(message):
             logging.error(f'Missing link in replied message: {message.content}')
             return False
         if not author:
-            logging.error(f'Missing author in replied message: {message.content}')
-            logging.error(f'{embed.to_dict()}')
+            author = get_artist_from_spotify_link(link)
+        if not author:
+            logging.error(f'Missing author in replied message: {message.content}') 
             return False
         
         db.insert_recommendation(message.id, author, title, link, genres, tag)
