@@ -72,7 +72,7 @@ class RecView(View):
         for i, name in enumerate(recommended_by):
             self.add_item(RecButton(name, db))
         self.add_item(
-            BackButton(db, i + 1, RatingsStartView(db), "View Reviews By:"))
+            BackButton(db, 1, RatingsStartView(db), "View Reviews By:"))
 
 
 # class RecBackButton(Button):
