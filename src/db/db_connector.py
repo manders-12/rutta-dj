@@ -55,7 +55,7 @@ class DBConnector:
         cursor.execute('''
             INSERT INTO recommendations (message_id, title, author, link, genre1, genre2, tag)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (message_id, title, author, link, genres[0], genres[1], tag))
+        ''', (message_id, title, author, link, str(genres[0]), str(genres[1]), tag))
         conn.commit()
 
     def insert_rating(self, message_id, recommended_by, track_name, link, rating, review):
