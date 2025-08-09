@@ -39,7 +39,7 @@ def parse_recommendation(text):
 def parse_embed(embed):
     try:
         title = embed.title if embed.title else ''
-        author = embed.author.name if embed.author else embed.footer.text if embed.footer else embed.description if embed.description else ''
+        author = embed.author.name if embed.author else embed.footer.text if embed.footer else embed.description if embed.description else embed.fields[0].value if embed.fields else ''
         if author.endswith(' - Topic'):
             author = author.rstrip(' - Topic')
         link = embed.url if hasattr(embed, 'url') else None
