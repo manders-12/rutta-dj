@@ -1,1 +1,1 @@
-Rating and Recommendation Archival Bot for Discord
+Music Rating and Recommendation Archival Bot for Discord
