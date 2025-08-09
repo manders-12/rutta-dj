@@ -136,8 +136,14 @@ async def process_track_list_message(message):
             logging.error(f'Message {message.content} does not contain an embed.')
             return False
         
-        if not title or not link or not author:
-            logging.error(f'Missing title, link, or author in message: {text}')
+        if not title:
+            logging.error(f'Missing title in replied message: {message.content}')
+            return False
+        if not link:
+            logging.error(f'Missing link in replied message: {message.content}')
+            return False
+        if not author:
+            logging.error(f'Missing author in replied message: {message.content}')
             return False
         
         db.insert_recommendation(message.id, author, title, link, genres, tag)
