@@ -3,7 +3,7 @@ import re
 import logging
 import os
 from dotenv import load_dotenv
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from db.db_connector import DBConnector
 from views.ratings import RatingsStartView
 from views.recommendations import RecommendationsStartView
@@ -110,7 +110,7 @@ async def process_track_list_message(message):
     # OR:
     # @Genre[s] - Tag\nhttps://www.youtube.com/watch?v=4hz68I4BRMA
     logging.info(f'Received message from {message.author.global_name} in {TRACK_LIST_CHANNEL}: {message.content}')
-    if (message.created_at + datetime.timedelta(seconds = 60) > datetime.now(timezone.utc)): time.sleep(5) #Pray the embed is generated :)
+    if (message.created_at + timedelta(seconds = 60) > datetime.now(timezone.utc)): time.sleep(5) #Pray the embed is generated :)
     try:
         text = message.content.strip()
         lines = text.split('\n')
