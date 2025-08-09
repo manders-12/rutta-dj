@@ -29,7 +29,8 @@ class DBConnector:
                 title TEXT,
                 author TEXT,
                 link TEXT,
-                genre TEXT,
+                genre1 TEXT,
+                genre2 TEXT,
                 tag TEXT,
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
             )
@@ -48,13 +49,13 @@ class DBConnector:
         ''')
         conn.commit()
 
-    def insert_recommendation(self, message_id, author, title, link, genre, tag):
+    def insert_recommendation(self, message_id, author, title, link, genres, tag):
         conn = self.connect()
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO recommendations (message_id, title, author, link, genre, tag)
+            INSERT INTO recommendations (message_id, title, author, link, genre1, genre2, tag)
             VALUES (?, ?, ?, ?, ?, ?)
-        ''', (message_id, title, author, link, genre, tag))
+        ''', (message_id, title, author, link, genres[0], genres[1], tag))
         conn.commit()
 
     def insert_rating(self, message_id, recommended_by, track_name, link, rating, review):

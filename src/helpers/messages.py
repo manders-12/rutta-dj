@@ -46,3 +46,4 @@ def parse_embed(embed):
         logging.error(f'Error parsing embed: {e}')
         title, author, link = None, None, None
     return title, author, link
+    

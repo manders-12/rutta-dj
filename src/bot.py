@@ -95,6 +95,111 @@ def create_recommendation_embed(title, author, link, genre, tag):
         embed.set_footer(text='Rutta DJ Bot')
     return embed
 
+async def process_message2(message):
+    if str(message.author.global_name).lower() != CONTROLLING_USER:
+        return False
+    
+    if message.channel.name == TRACK_LIST_CHANNEL:
+        return process_track_list_message(message)
+    elif message.channel.name == MUSIC_REVIEW_CHANNEL:
+        return process_music_review_message(message)
+    
+async def process_track_list_message(message): 
+    # Expecting format:
+    # Genre - Tag\nhttps://www.youtube.com/watch?v=4hz68I4BRMA
+    # OR:
+    # @Genre[s] - Tag\nhttps://www.youtube.com/watch?v=4hz68I4BRMA
+    logging.info(f'Received message from {message.author.global_name} in {TRACK_LIST_CHANNEL}: {message.content}')
+    try:
+        text = message.content.strip()
+        lines = text.split('\n')
+        if len(lines) < 2:
+            logging.error(f'Invalid format in message: {text}')
+            return False
+        
+        genre_tag_line = lines[0].strip().split('-')
+        if len(genre_tag_line) < 2:
+            logging.error(f'Invalid genre-tag format in message: {text}')
+            return False
+        genres = re.findall(r'<@&\d+>', genre_tag_line[0])
+        if not genres:
+            genres = [genre_tag_line[0].strip(), None]
+        tag = genre_tag_line[-1].strip()
+        
+        if message.embeds:
+            embed = message.embeds[0]
+            title, author, link = parse_embed(embed)
+        
+        if not title or not link or not author:
+            logging.error(f'Missing title, link, or author in message: {text}')
+            return False
+        
+        db.insert_recommendation(message.id, author, title, link, genres, tag)
+        embed = create_recommendation_embed(title, author, link, ', '.join(genres), tag)
+        logging.info(f'Recommendation inserted: {title} by {author} ({link}) with genres {genres} and tag {tag}')
+        curr_time = datetime.now(timezone.utc)
+        diff = curr_time - message.created_at
+        if diff.total_seconds() < 360:
+            await message.channel.send(embed=embed)
+
+    except Exception as e:
+        logging.error(f'Error processing track list message: {e}')
+        return False
+
+async def process_music_review_message(message):
+    # If Rutta is rating a track, he should be replying to a message with the song link
+    # This assumes that the embed is in the replied message and has already been generated. Might break if embed isn't generated or there's a lot of lag
+    if not message.reference:
+        logging.error(f'Message {message.id} is not a reply to a recommendation.')
+        return False
+    
+    try:
+        #look for the replied message and embed and parse it if present
+        replied_message = await message.channel.fetch_message(message.reference.message_id)
+        if not replied_message.embeds:
+            logging.error(f'Replied message {replied_message.id} does not contain an embed.')
+            return False
+        embed = replied_message.embeds[0]
+        title, author, link = parse_embed(embed)
+        if not title or not link or not author:
+            logging.error(f'Missing title, link, or author in replied message: {replied_message.content}')
+            return False
+        
+        # Check if we're looking at an album or a track
+        # Review format expected:
+
+        # Title - Rating\nExplanation
+        # Example: "Track Name - 5\nThis track is amazing!"
+
+        # OR
+        
+        # Rating\nExplanation
+        # Example: "5\nThis track is amazing!"
+        # use re to find all ratings and explanations, if findall returns more than one and the title contains album or discography, assume it's an album review
+        # This regex matches: optional title, rating, and explanation
+        # Example: "Track Title - 5\nExplanation" or "5\nExplanation"
+
+        #WARNING CURSED REGEX HIDE YOUR EYES I'M SO SORRY
+        tracks_to_process = re.findall(r"(?:^|\n)(?:(.+?)\s*-\s*)?(\d+(?:\.\d+)?)\n(.+?)(?=\n(?:.+?\s*-\s*)?\d+(?:\.\d+)?\n|$)", message.content)
+        if 'album' in title.lower() or 'discography' in title.lower() or len(tracks_to_process) > 1:
+            logging.info(f'Processing album recommendation: {title}')
+        for track in tracks_to_process:
+            track_name, rating, explanation = track
+            if not track_name:
+                track_name = title
+            if not rating or not explanation:
+                logging.error(f'Missing rating or explanation in message: {message.content}')
+                return False
+            db.insert_rating(message.id, replied_message.author.global_name, track_name, link, rating, explanation)
+            embed = create_rating_embed(track_name, author, link, rating, explanation)
+            logging.info(f'Rating inserted: {track_name} by {author} ({link}) with rating {rating} and explanation "{explanation}"')
+            curr_time = datetime.now(timezone.utc)
+            diff = curr_time - message.created_at
+            if diff.total_seconds() < 360:
+                await message.channel.send(embed=embed)
+    except Exception as e:
+        logging.error(f'Error processing music review message: {e}')
+        return False
 
 async def process_message(message):
     if message.author == client.user:
@@ -209,16 +314,13 @@ async def on_ready():
 
 
 @client.command()
-#@commands.has_permissions(administrator=True)
+@commands.has_permissions(administrator=True)
 async def process(ctx):
     logging.info(f'Received request to process history')
 
     try:
-        channels = []
-        for channel in client.get_all_channels():
-            if channel.name in [TRACK_LIST_CHANNEL, MUSIC_REVIEW_CHANNEL
-                                ] and isinstance(channel, discord.TextChannel):
-                channels.append(channel)
+        channels = [ch for ch in client.get_all_channels() if ch.name in [TRACK_LIST_CHANNEL, MUSIC_REVIEW_CHANNEL] and isinstance(ch, discord.TextChannel)]
+        
         if not channels:
             await ctx.send(f"Target channel {channel} not found!")
             return
@@ -229,7 +331,7 @@ async def process(ctx):
         # Process messages in batches to avoid memory issues
         for channel in channels:
             logging.info(f'Starting historical processing in {channel}')
-            async for message in channel.history(oldest_first=True):
+            async for message in channel.history(limit=None, oldest_first=True):
                 if await process_message(message):
                     processed_count += 1
                 else:
@@ -282,11 +384,9 @@ async def on_message_edit(before, after):
         return
 
     # Only process messages in the relevant channels
-    logging.info(
-        f'Received edited message in {after.channel.name}: {after.content}')
-    if after.channel.name == TRACK_LIST_CHANNEL and len(
-            before.embeds) == 0 and len(after.embeds) > 0 and str(
-                after.author.global_name).lower() == CONTROLLING_USER:
+    logging.info(f'Received edited message in {after.channel.name}: {after.content}')
+
+    if after.channel.name == TRACK_LIST_CHANNEL and len(before.embeds) == 0 and len(after.embeds) > 0 and str(after.author.global_name).lower() == CONTROLLING_USER:
         genre, tag = parse_recommendation(after.content)
         title, author, link = parse_embed(after.embeds[0])
         if genre and tag and title and author and link:
