@@ -100,9 +100,9 @@ async def process_message(message):
         return False
     
     if message.channel.name == TRACK_LIST_CHANNEL:
-        return process_track_list_message(message)
+        return await process_track_list_message(message)
     elif message.channel.name == MUSIC_REVIEW_CHANNEL:
-        return process_music_review_message(message)
+        return await process_music_review_message(message)
     
 async def process_track_list_message(message): 
     # Expecting format:
@@ -110,6 +110,7 @@ async def process_track_list_message(message):
     # OR:
     # @Genre[s] - Tag\nhttps://www.youtube.com/watch?v=4hz68I4BRMA
     logging.info(f'Received message from {message.author.global_name} in {TRACK_LIST_CHANNEL}: {message.content}')
+    if (message.created_at + datetime.timedelta(seconds = 60) > datetime.now(timezone.utc)): time.sleep(5) #Pray the embed is generated :)
     try:
         text = message.content.strip()
         lines = text.split('\n')
@@ -378,29 +379,29 @@ async def on_message(message):
     await process_message(message)
 
 
-@client.event
-async def on_message_edit(before, after):
-    if after.author == client.user:
-        return
+# @client.event
+# async def on_message_edit(before, after):
+#     if after.author == client.user:
+#         return
 
-    # Only process messages in the relevant channels
-    logging.info(f'Received edited message in {after.channel.name}: {after.content}')
+#     # Only process messages in the relevant channels
+#     logging.info(f'Received edited message in {after.channel.name}: {after.content}')
 
-    if after.channel.name == TRACK_LIST_CHANNEL and len(before.embeds) == 0 and len(after.embeds) > 0 and str(after.author.global_name).lower() == CONTROLLING_USER:
-        genre, tag = parse_recommendation(after.content)
-        title, author, link = parse_embed(after.embeds[0])
-        if genre and tag and title and author and link:
-            try:
-                db.insert_recommendation(after.id, author, title, link, genre,
-                                         tag)
-                embed = create_recommendation_embed(title, author, link, genre,
-                                                    tag)
-                await after.channel.send(embed=embed)
-                logging.info(
-                    f'Recommendation inserted on edit: {title} by {author} ({link}) with genre {genre} and tag {tag}'
-                )
-            except Exception as e:
-                logging.error(f'Error inserting recommendation on edit: {e}')
+#     if after.channel.name == TRACK_LIST_CHANNEL and len(before.embeds) == 0 and len(after.embeds) > 0 and str(after.author.global_name).lower() == CONTROLLING_USER:
+#         genre, tag = parse_recommendation(after.content)
+#         title, author, link = parse_embed(after.embeds[0])
+#         if genre and tag and title and author and link:
+#             try:
+#                 db.insert_recommendation(after.id, author, title, link, genre,
+#                                          tag)
+#                 embed = create_recommendation_embed(title, author, link, genre,
+#                                                     tag)
+#                 await after.channel.send(embed=embed)
+#                 logging.info(
+#                     f'Recommendation inserted on edit: {title} by {author} ({link}) with genre {genre} and tag {tag}'
+#                 )
+#             except Exception as e:
+#                 logging.error(f'Error inserting recommendation on edit: {e}')
 
 
 try:
