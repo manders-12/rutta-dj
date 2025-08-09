@@ -144,6 +144,10 @@ async def process_track_list_message(message):
             return False
         if not author:
             logging.error(f'Missing author in replied message: {message.content}')
+            logging.error(f'{embed.footer.text if embed.footer else "No footer"}')
+            logging.error(f'{embed.description if embed.description else "No description"}')
+            logging.error(f'{embed.fields[0].value if embed.fields else "No fields"}')
+            logging.error(f'{embed.fields[1].value if embed.fields else "No fields"}')
             return False
         
         db.insert_recommendation(message.id, author, title, link, genres, tag)
