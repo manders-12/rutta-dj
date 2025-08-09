@@ -212,8 +212,8 @@ async def process_music_review_message(message):
             if not rating or not explanation:
                 logging.error(f'Missing rating or explanation in message: {message.content}')
                 return False
-            #If it's an album the title might start with Track 1 - track_name. We want to strip the Track [Integer] - part
-            track_name = re.sub(r'^Track \d+ - ', '', track_name.strip())
+            #If it's an album the title might start with Track 1 - track_name or Track 1: track_name. We want to strip the Track [Integer] -  or Track [Integer]: part
+            track_name = re.sub(r'^Track \d+ - |^Track \d+: ', '', track_name.strip())
             unique_id = f"{message.id}-{idx}" if len(tracks_to_process) > 1 else message.id
             db.insert_rating(unique_id, replied_message.author.global_name, track_name, link, rating, explanation)
             embed = create_rating_embed(track_name, author, link, rating, explanation)
@@ -222,7 +222,7 @@ async def process_music_review_message(message):
             diff = curr_time - message.created_at
             if diff.total_seconds() < 360:
                 await message.channel.send(embed=embed)
-            return True
+        return True
     except Exception as e:
         logging.error(f'Error processing music review message: {e}')
         return False
