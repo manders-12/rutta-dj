@@ -167,8 +167,12 @@ async def process_music_review_message(message):
             return False
         embed = replied_message.embeds[0]
         title, author, link = parse_embed(embed)
-        if not title or not link or not author:
-            logging.error(f'Missing title, link, or author in replied message: {replied_message.content}')
+        if not title:
+            logging.error(f'Missing title in replied message: {replied_message.content}')
+        if not link:
+            logging.error(f'Missing linkin replied message: {replied_message.content}')
+        if not author:
+            logging.error(f'Missing author in replied message: {replied_message.content}')
             return False
         
         # Check if we're looking at an album or a track
@@ -204,6 +208,7 @@ async def process_music_review_message(message):
             diff = curr_time - message.created_at
             if diff.total_seconds() < 360:
                 await message.channel.send(embed=embed)
+            return True
     except Exception as e:
         logging.error(f'Error processing music review message: {e}')
         return False
