@@ -314,7 +314,7 @@ async def on_ready():
 
 
 @client.command()
-@commands.has_permissions(administrator=True)
+#@commands.has_permissions(administrator=True)
 async def process(ctx):
     logging.info(f'Received request to process history')
 
