@@ -189,14 +189,15 @@ async def process_music_review_message(message):
         tracks_to_process = re.findall(r"(?:^|\n)(?:(.+?)\s*-\s*)?(\d+(?:\.\d+)?)\n(.+?)(?=\n(?:.+?\s*-\s*)?\d+(?:\.\d+)?\n|$)", message.content)
         if 'album' in title.lower() or 'discography' in title.lower() or len(tracks_to_process) > 1:
             logging.info(f'Processing album recommendation: {title}')
-        for track in tracks_to_process:
+        for idx, track in enumerate(tracks_to_process):
             track_name, rating, explanation = track
             if not track_name:
                 track_name = title
             if not rating or not explanation:
                 logging.error(f'Missing rating or explanation in message: {message.content}')
                 return False
-            db.insert_rating(message.id, replied_message.author.global_name, track_name, link, rating, explanation)
+            unique_id = f"{message.id}-{idx}" if len(tracks_to_process) > 1 else message.id
+            db.insert_rating(unique_id, replied_message.author.global_name, track_name, link, rating, explanation)
             embed = create_rating_embed(track_name, author, link, rating, explanation)
             logging.info(f'Rating inserted: {track_name} by {author} ({link}) with rating {rating} and explanation "{explanation}"')
             curr_time = datetime.now(timezone.utc)
