@@ -126,7 +126,7 @@ async def process_track_list_message(message):
         if not genres:
             genres = genre_tag_line[0].strip().split(' ')
         if len(genres) < 2:
-            genres.append(None)  # Ensure we have at least two genres
+            genres.append('')  # Ensure we have at least two genres
         tag = genre_tag_line[-1].strip()
         
         if message.embeds:
@@ -141,11 +141,11 @@ async def process_track_list_message(message):
             return False
         
         db.insert_recommendation(message.id, author, title, link, genres, tag)
-        embed = create_recommendation_embed(title, author, link, ', '.join(genres), tag)
         logging.info(f'Recommendation inserted: {title} by {author} ({link}) with genres {genres} and tag {tag}')
         curr_time = datetime.now(timezone.utc)
         diff = curr_time - message.created_at
         if diff.total_seconds() < 360:
+            embed = create_recommendation_embed(title, author, link, ' '.join(genres), tag)
             await message.channel.send(embed=embed)
 
     except Exception as e:
