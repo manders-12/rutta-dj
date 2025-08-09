@@ -95,7 +95,7 @@ def create_recommendation_embed(title, author, link, genre, tag):
         embed.set_footer(text='Rutta DJ Bot')
     return embed
 
-async def process_message2(message):
+async def process_message(message):
     if str(message.author.global_name).lower() != CONTROLLING_USER:
         return False
     
@@ -201,111 +201,111 @@ async def process_music_review_message(message):
         logging.error(f'Error processing music review message: {e}')
         return False
 
-async def process_message(message):
-    if message.author == client.user:
-        return False  # Ignore messages from the bot itself
+# async def process_message(message):
+#     if message.author == client.user:
+#         return False  # Ignore messages from the bot itself
 
-    # Only process messages in the relevant channels
-    if message.channel.name == TRACK_LIST_CHANNEL:
-        logging.info(
-            f'Received message from {message.author.global_name} in {TRACK_LIST_CHANNEL}: {message.content}'
-        )
-        # Only process messages from Rutta
-        if str(message.author.global_name).lower() == CONTROLLING_USER:
-            # Expecting format:
-            # Genre - Tag\nhttps://www.youtube.com/watch?v=4hz68I4BRMA
-            if message.embeds:
-                embed = None
-                genre, tag = parse_recommendation(message.content)
-                title, author, link = parse_embed(message.embeds[0])
-                if genre and tag and title:
-                    if not author: author = 'Unknown'
-                    try:
-                        db.insert_recommendation(message.id, author, title,
-                                                 link, genre, tag)
-                        logging.info(
-                            f'Recommendation inserted: {title} by {author} ({link}) with genre {genre} and tag {tag}'
-                        )
-                    except Exception as e:
-                        embed = discord.Embed(
-                            title='Error',
-                            description='Failed to insert recommendation.')
-                        logging.error(f'Error inserting recommendation: {e}')
-                    try:
-                        if not embed:
-                            embed = create_recommendation_embed(
-                                title, author, link, genre, tag)
-                    except Exception as e:
-                        embed = discord.Embed(
-                            title='Error',
-                            description='Failed to create recommendation embed.'
-                        )
-                        logging.error(
-                            f'Error creating recommendation embed: {e}')
-                    curr_time = datetime.now(timezone.utc)
-                    diff = curr_time - message.created_at
-                    if diff.total_seconds() < 360:
-                        await message.channel.send(embed=embed)
-                    if (embed.title == 'Error'): return False
-                    else: return True
-                else:
-                    logging.error(f'Failed to parse recommendation: {message.content}')
-                    return False
-            else:
-                logging.info(
-                    f'No embeds found in message: {message.content}. Waiting for edit.'
-                )
-                return False  # Wait for edit to process the recommendation
-        else:
-            return False  # Skip messages not from Rutta
+#     # Only process messages in the relevant channels
+#     if message.channel.name == TRACK_LIST_CHANNEL:
+#         logging.info(
+#             f'Received message from {message.author.global_name} in {TRACK_LIST_CHANNEL}: {message.content}'
+#         )
+#         # Only process messages from Rutta
+#         if str(message.author.global_name).lower() == CONTROLLING_USER:
+#             # Expecting format:
+#             # Genre - Tag\nhttps://www.youtube.com/watch?v=4hz68I4BRMA
+#             if message.embeds:
+#                 embed = None
+#                 genre, tag = parse_recommendation(message.content)
+#                 title, author, link = parse_embed(message.embeds[0])
+#                 if genre and tag and title:
+#                     if not author: author = 'Unknown'
+#                     try:
+#                         db.insert_recommendation(message.id, author, title,
+#                                                  link, genre, tag)
+#                         logging.info(
+#                             f'Recommendation inserted: {title} by {author} ({link}) with genre {genre} and tag {tag}'
+#                         )
+#                     except Exception as e:
+#                         embed = discord.Embed(
+#                             title='Error',
+#                             description='Failed to insert recommendation.')
+#                         logging.error(f'Error inserting recommendation: {e}')
+#                     try:
+#                         if not embed:
+#                             embed = create_recommendation_embed(
+#                                 title, author, link, genre, tag)
+#                     except Exception as e:
+#                         embed = discord.Embed(
+#                             title='Error',
+#                             description='Failed to create recommendation embed.'
+#                         )
+#                         logging.error(
+#                             f'Error creating recommendation embed: {e}')
+#                     curr_time = datetime.now(timezone.utc)
+#                     diff = curr_time - message.created_at
+#                     if diff.total_seconds() < 360:
+#                         await message.channel.send(embed=embed)
+#                     if (embed.title == 'Error'): return False
+#                     else: return True
+#                 else:
+#                     logging.error(f'Failed to parse recommendation: {message.content}')
+#                     return False
+#             else:
+#                 logging.info(
+#                     f'No embeds found in message: {message.content}. Waiting for edit.'
+#                 )
+#                 return False  # Wait for edit to process the recommendation
+#         else:
+#             return False  # Skip messages not from Rutta
 
-    elif message.channel.name == MUSIC_REVIEW_CHANNEL:
-        # If Rutta is rating a track, he should be replying to a message with the song link
-        # This assumes that the embed is in the replied message and has already been generated. Might break if embed isn't generated or there's a lot of lag
-        if str(message.author.global_name).lower() == CONTROLLING_USER and message.reference:
-            try:
-                replied_message = await message.channel.fetch_message(message.reference.message_id)
-            except Exception as e:
-                replied_message = None
-                logging.warning(
-                    f'Could not fetch replied message: {message.reference.message_id}. Error: {e}'
-                )
-                return False
-            if replied_message:
-                recommended_by = replied_message.author.global_name if replied_message.author else 'Unknown'
-                title, author, link = None, None, None
-                if replied_message.embeds:
-                    title, author, link = parse_embed(replied_message.embeds[0])
-                rating, explanation = parse_rating(message.content)
-                if title and link and rating is not None:
-                    if not author: author = 'Unknown'
-                    try:
-                        db.insert_rating(message.id, recommended_by, title,
-                                         link, rating, explanation)
-                        embed = create_rating_embed(title, author, link,
-                                                    rating, explanation)
-                        logging.info(
-                            f'Rating inserted: {title} by {author} ({link}) with rating {rating} and explanation "{explanation}"'
-                        )
-                    except Exception as e:
-                        embed = discord.Embed(
-                            title='Error',
-                            description='Failed to insert rating.')
-                        logging.error(f'Error inserting rating: {e}. Title: {title}, Author: {author}, Link: {link}, Rating: {rating}, Explanation: {explanation}')
-                        return False
-                    curr_time = datetime.now(timezone.utc)
-                    diff = curr_time - message.created_at
-                    if diff.total_seconds() < 360:
-                        await message.channel.send(embed=embed)
-                    return True
-                else:
-                    logging.error(f'Failed to parse rating: {message.content}. Title: {title}, Author: {author}, Link: {link}, Rating: {rating}')
-                    return False
-        elif str(message.author.global_name).lower() == CONTROLLING_USER:
-            logging.error(
-                f'No embeds found in replied message: {message.content}'
-            )
-            return False
+#     elif message.channel.name == MUSIC_REVIEW_CHANNEL:
+#         # If Rutta is rating a track, he should be replying to a message with the song link
+#         # This assumes that the embed is in the replied message and has already been generated. Might break if embed isn't generated or there's a lot of lag
+#         if str(message.author.global_name).lower() == CONTROLLING_USER and message.reference:
+#             try:
+#                 replied_message = await message.channel.fetch_message(message.reference.message_id)
+#             except Exception as e:
+#                 replied_message = None
+#                 logging.warning(
+#                     f'Could not fetch replied message: {message.reference.message_id}. Error: {e}'
+#                 )
+#                 return False
+#             if replied_message:
+#                 recommended_by = replied_message.author.global_name if replied_message.author else 'Unknown'
+#                 title, author, link = None, None, None
+#                 if replied_message.embeds:
+#                     title, author, link = parse_embed(replied_message.embeds[0])
+#                 rating, explanation = parse_rating(message.content)
+#                 if title and link and rating is not None:
+#                     if not author: author = 'Unknown'
+#                     try:
+#                         db.insert_rating(message.id, recommended_by, title,
+#                                          link, rating, explanation)
+#                         embed = create_rating_embed(title, author, link,
+#                                                     rating, explanation)
+#                         logging.info(
+#                             f'Rating inserted: {title} by {author} ({link}) with rating {rating} and explanation "{explanation}"'
+#                         )
+#                     except Exception as e:
+#                         embed = discord.Embed(
+#                             title='Error',
+#                             description='Failed to insert rating.')
+#                         logging.error(f'Error inserting rating: {e}. Title: {title}, Author: {author}, Link: {link}, Rating: {rating}, Explanation: {explanation}')
+#                         return False
+#                     curr_time = datetime.now(timezone.utc)
+#                     diff = curr_time - message.created_at
+#                     if diff.total_seconds() < 360:
+#                         await message.channel.send(embed=embed)
+#                     return True
+#                 else:
+#                     logging.error(f'Failed to parse rating: {message.content}. Title: {title}, Author: {author}, Link: {link}, Rating: {rating}')
+#                     return False
+#         elif str(message.author.global_name).lower() == CONTROLLING_USER:
+#             logging.error(
+#                 f'No embeds found in replied message: {message.content}'
+#             )
+#             return False
 
 
 @client.event
@@ -331,7 +331,7 @@ async def process(ctx):
         # Process messages in batches to avoid memory issues
         for channel in channels:
             logging.info(f'Starting historical processing in {channel}')
-            async for message in channel.history(limit=None, oldest_first=True):
+            async for message in channel.history(limit=1000, oldest_first=True):
                 if await process_message(message):
                     processed_count += 1
                 else:
