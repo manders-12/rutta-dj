@@ -1,7 +1,7 @@
 import discord
 from discord.ui import View, Button
 from components.BackButton import BackButton
-
+import logging
 def _build_embed_table(recommendations):
     embed = discord.Embed(title="Results", color=discord.Color.blue())
     for rec in recommendations:
@@ -36,6 +36,7 @@ class GenreView(View):
         super().__init__()
         self.db = db
         genres = db.get_all_genres()
+        logging.info(f"Available genres: {genres}")
         for i, genre in enumerate(genres):
             self.add_item(GenreButton(genre, db))
         self.add_item(BackButton(db, 1, RecommendationsStartView(db), "View Recommendations By:"))
