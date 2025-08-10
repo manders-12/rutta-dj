@@ -95,8 +95,8 @@ class DBConnector:
         conn = self.connect()
         cursor = conn.cursor()
         cursor.execute('''
-            SELECT * FROM recommendations WHERE genre = ?
-        ''', (genre,))
+            SELECT * FROM recommendations WHERE genre1 = ? or genre2 = ?
+        ''', (genre, genre))
         return cursor.fetchall()
 
     def get_recommendations_by_tag(self, tag):
@@ -111,7 +111,9 @@ class DBConnector:
         conn = self.connect()
         cursor = conn.cursor()
         cursor.execute('''
-            SELECT DISTINCT genre FROM recommendations
+            SELECT DISTINCT genre1 AS genre FROM recommendations
+            UNION ALL
+            SELECT DISTINCT genre2 AS genre FROM recommendations
         ''')
         return [row['genre'] for row in cursor.fetchall()]
 
