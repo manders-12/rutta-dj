@@ -40,7 +40,7 @@ class GenreView(View):
         self.db = db
         self.page = page
         self.genres = db.get_all_genres()
-        self.page_size = 37
+        self.page_size = 15
         self.max_page = (len(self.genres) - 1) // self.page_size
         start = self.page * self.page_size
         end = start + self.page_size
