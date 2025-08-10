@@ -3,9 +3,8 @@ from discord.ui import View, Button
 from components.BackButton import BackButton
 
 
-def _build_embed_table(results):
-    embed = discord.Embed(title="Results", color=discord.Color.blue())
-    for result in results:
+def _build_embed_table(results, j = 0, embed=None):
+    for j, result in enumerate(results):
         embed.add_field(
             name=result['track_name'],
             value=
@@ -14,6 +13,22 @@ def _build_embed_table(results):
     embed.set_footer(text="Click 'Close' to dismiss this message.")
     return embed
 
+# Discord's embed field limit is 25, so we need to split results into multiple embeds if they exceed this limit, we'll call _build_embed_table as many times as needed
+def _build_embed_tables(results):
+    embeds = []
+    embed = discord.Embed(title="Results", description="Page 1", color=discord.Color.blue())
+    for i, result in enumerate(results):
+        if i % 25 == 0 and i > 0:
+            embeds.append(embed)
+            embed = discord.Embed(title="Results", description=f"Page {(i//25)+1}", color=discord.Color.blue())
+        embed.add_field(
+            name=result['track_name'],
+            value=
+            f"Rating: {result['rating']}\nReview: {result['review']}\nRecommended By: {result['recommended_by']}",
+            inline=False)
+    if embed.fields:
+        embeds.append(embed)
+    return embeds
 
 class RatingsStartView(View):
 
@@ -42,7 +57,6 @@ class RatingsStartView(View):
 
 
 class RatingsView(View):
-
     def __init__(self, db):
         super().__init__()
         self.db = db
@@ -109,10 +123,12 @@ class RecButton(Button):
     async def callback(self, interaction: discord.Interaction):
         results = self.db.get_tracks_by_recommended_by(self.name)
         if results:
-            embed = _build_embed_table(results)
-            await interaction.response.edit_message(content=None,
-                                                    embed=embed,
-                                                    view=ResultsTable())
+            embeds = _build_embed_tables(results)
+            await interaction.response.edit_message(
+                content=None,
+                embed=embeds[0],
+                view=ResultsTable(embeds, 0)
+            )
         else:
             await interaction.response.send_message(
                 f"No tracks found recommended by {self.name}.", ephemeral=True)
@@ -130,10 +146,12 @@ class RatingButton(Button):
     async def callback(self, interaction: discord.Interaction):
         results = self.db.get_tracks_by_rating(self.value)
         if results:
-            embed = _build_embed_table(results)
-            await interaction.response.edit_message(content=None,
-                                                    embed=embed,
-                                                    view=ResultsTable())
+            embeds = _build_embed_tables(results)
+            await interaction.response.edit_message(
+                content=None,
+                embed=embeds[0],
+                view=ResultsTable(embeds, 0)
+            )
         else:
             await interaction.response.send_message(
                 f"No tracks found with rating {self.value}.", ephemeral=True)
@@ -141,12 +159,47 @@ class RatingButton(Button):
 
 class ResultsTable(View):
 
-    def __init__(self):
+    def __init__(self, embeds, page):
         super().__init__()
+        self.embeds = embeds
+        self.page = page
+        self.add_item(PreviousButton())
+        self.add_item(NextButton())
+        self.add_item(CloseButton())
 
-    @discord.ui.button(label="Close",
-                       style=discord.ButtonStyle.danger,
-                       custom_id="close")
-    async def close_callback(self, interaction: discord.Interaction,
-                             button: Button):
-        await interaction.response.edit_message(delete_after=1)
+    async def update_embed(self, interaction):
+        await interaction.response.edit_message(
+            embed=self.embeds[self.page],
+            view=self
+        )
+
+class PreviousButton(Button):
+    def __init__(self):
+        super().__init__(label="Previous", style=discord.ButtonStyle.primary)
+
+    async def callback(self, interaction: discord.Interaction):
+        view = self.view
+        if view.page > 0:
+            view.page -= 1
+            await view.update_embed(interaction)
+        else:
+            await interaction.response.send_message("Already at the first page.", ephemeral=True)
+
+class NextButton(Button):
+    def __init__(self):
+        super().__init__(label="Next", style=discord.ButtonStyle.primary)
+
+    async def callback(self, interaction: discord.Interaction):
+        view = self.view
+        if view.page < len(view.embeds) - 1:
+            view.page += 1
+            await view.update_embed(interaction)
+        else:
+            await interaction.response.send_message("Already at the last page.", ephemeral=True)
+
+class CloseButton(Button):
+    def __init__(self):
+        super().__init__(label="Close", style=discord.ButtonStyle.danger)
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.edit_message(view=None)
