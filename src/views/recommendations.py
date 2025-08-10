@@ -2,6 +2,9 @@ import discord
 from discord.ui import View, Button
 from components.BackButton import BackButton
 import logging
+
+logger = logging.getLogger(__name__)
+
 def _build_embed_table(recommendations):
     embed = discord.Embed(title="Results", color=discord.Color.blue())
     for rec in recommendations:
