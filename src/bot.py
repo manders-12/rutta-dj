@@ -125,7 +125,7 @@ async def process_track_list_message(message):
             return False
         genres = re.findall(r'<@&\d+>', genre_tag_line[0])
         if not genres:
-            genres = genre_tag_line[0].strip().split(' ')
+            genres = genre_tag_line[0].strip().split('/') if '/' in genre_tag_line[0] else genre_tag_line[0].strip().split('\\') if '\\' in genre_tag_line[0] else genre_tag_line[0].strip().split(' ')
         if len(genres) < 2:
             genres.append('')  # Ensure we have at least two genres
         tag = genre_tag_line[-1].strip()
