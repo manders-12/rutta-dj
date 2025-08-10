@@ -202,4 +202,4 @@ class CloseButton(Button):
         super().__init__(label="Close", style=discord.ButtonStyle.danger)
 
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.edit_message(view=None)
+        await interaction.response.edit_message(view=None, delete_after=0.1)
