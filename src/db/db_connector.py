@@ -112,7 +112,7 @@ class DBConnector:
         cursor = conn.cursor()
         cursor.execute('''
             SELECT DISTINCT genre1 AS genre FROM recommendations
-            UNION ALL
+            UNION
             SELECT DISTINCT genre2 AS genre FROM recommendations
         ''')
         return [row['genre'] for row in cursor.fetchall()]
