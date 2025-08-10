@@ -35,14 +35,45 @@ class RecommendationsStartView(View):
         )
 
 class GenreView(View):
-    def __init__(self, db):
+    def __init__(self, db, page=0):
         super().__init__()
         self.db = db
-        genres = db.get_all_genres()
-        logging.info(f"Available genres: {genres}")
-        for i, genre in enumerate(genres):
+        self.page = page
+        self.genres = db.get_all_genres()
+        self.page_size = 37
+        self.max_page = (len(self.genres) - 1) // self.page_size
+        start = self.page * self.page_size
+        end = start + self.page_size
+        for genre in self.genres[start:end]:
             self.add_item(GenreButton(genre, db))
+        # Add navigation buttons
+        if self.page > 0:
+            self.add_item(PrevGenreButton(db, self.page))
+        if self.page < self.max_page:
+            self.add_item(NextGenreButton(db, self.page))
         self.add_item(BackButton(db, 1, RecommendationsStartView(db), "View Recommendations By:"))
+
+class PrevGenreButton(Button):
+    def __init__(self, db, page):
+        super().__init__(label="Prev", style=discord.ButtonStyle.secondary)
+        self.db = db
+        self.page = page
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.edit_message(
+            content="Select a genre:", view=GenreView(self.db, self.page - 1)
+        )
+
+class NextGenreButton(Button):
+    def __init__(self, db, page):
+        super().__init__(label="Next", style=discord.ButtonStyle.secondary)
+        self.db = db
+        self.page = page
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.edit_message(
+            content="Select a genre:", view=GenreView(self.db, self.page + 1)
+        )
 
 class GenreButton(Button):
     def __init__(self, genre, db):

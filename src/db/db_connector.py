@@ -111,9 +111,9 @@ class DBConnector:
         conn = self.connect()
         cursor = conn.cursor()
         cursor.execute('''
-            SELECT DISTINCT genre1 COLLATE NOCASE AS genre FROM recommendations
+            SELECT DISTINCT genre1 COLLATE NOCASE AS genre FROM recommendations WHERE genre1 IS NOT NULL
             UNION
-            SELECT DISTINCT genre2 COLLATE NOCASE AS genre FROM recommendations
+            SELECT DISTINCT genre2 COLLATE NOCASE AS genre FROM recommendations WHERE genre2 IS NOT NULL
         ''')
         return [row['genre'] for row in cursor.fetchall()]
 
