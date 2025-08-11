@@ -1,6 +1,8 @@
 import discord
 from discord.ui import View, Button
 from components.BackButton import BackButton
+from components.PrevButton import PrevButton
+from components.NextButton import NextButton
 import logging
 
 logger = logging.getLogger(__name__)
@@ -48,32 +50,32 @@ class GenreView(View):
             self.add_item(GenreButton(genre, db))
         # Add navigation buttons
         if self.page > 0:
-            self.add_item(PrevGenreButton(db, self.page))
+            self.add_item(PrevButton(db, self.page, GenreView(self.db, self.page - 1), "Select a genre:"))
         if self.page < self.max_page:
-            self.add_item(NextGenreButton(db, self.page))
+            self.add_item(NextButton(db, self.page, GenreView(self.db, self.page + 1), "Select a genre:"))
         self.add_item(BackButton(db, 1, RecommendationsStartView(db), "View Recommendations By:"))
 
-class PrevGenreButton(Button):
-    def __init__(self, db, page):
-        super().__init__(label="Prev", style=discord.ButtonStyle.secondary)
-        self.db = db
-        self.page = page
+# class PrevGenreButton(Button):
+#     def __init__(self, db, page):
+#         super().__init__(label="Prev", style=discord.ButtonStyle.secondary)
+#         self.db = db
+#         self.page = page
 
-    async def callback(self, interaction: discord.Interaction):
-        await interaction.response.edit_message(
-            content="Select a genre:", view=GenreView(self.db, self.page - 1)
-        )
+#     async def callback(self, interaction: discord.Interaction):
+#         await interaction.response.edit_message(
+#             content="Select a genre:", view=GenreView(self.db, self.page - 1)
+#         )
 
-class NextGenreButton(Button):
-    def __init__(self, db, page):
-        super().__init__(label="Next", style=discord.ButtonStyle.secondary)
-        self.db = db
-        self.page = page
+# class NextGenreButton(Button):
+#     def __init__(self, db, page):
+#         super().__init__(label="Next", style=discord.ButtonStyle.secondary)
+#         self.db = db
+#         self.page = page
 
-    async def callback(self, interaction: discord.Interaction):
-        await interaction.response.edit_message(
-            content="Select a genre:", view=GenreView(self.db, self.page + 1)
-        )
+#     async def callback(self, interaction: discord.Interaction):
+#         await interaction.response.edit_message(
+#             content="Select a genre:", view=GenreView(self.db, self.page + 1)
+#         )
 
 class GenreButton(Button):
     def __init__(self, genre, db):
