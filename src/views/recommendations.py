@@ -9,11 +9,11 @@ logger = logging.getLogger(__name__)
 
 def _build_embed_table(recommendations):
     embed = discord.Embed(title="Results", color=discord.Color.blue())
-    if rec['genre2']:
-        genre_string = f"Genres: {rec['genre1']}, {rec['genre2']}"
-    else:
-        genre_string = f"Genre: {rec['genre1']}"
     for rec in recommendations:
+        if rec['genre2']:
+            genre_string = f"Genres: {rec['genre1']}, {rec['genre2']}"
+        else:
+            genre_string = f"Genre: {rec['genre1']}"
         embed.add_field(
             name=rec['title'],
             value=f"Author: {rec['author']}\n{rec['link']}\n{genre_string}\nTag: {rec['tag']}",

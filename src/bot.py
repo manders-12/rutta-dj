@@ -79,10 +79,14 @@ def create_rating_embed(title, author, link, rating, explanation):
     return embed
 
 
-def create_recommendation_embed(title, author, link, genre, tag):
+def create_recommendation_embed(title, author, link, genres, tag):
     try:
+        if genres[1]:
+            genre_description = f'Genres: {genres[0]}, {genres[1]}'
+        else:
+            genre_description = f'Genre: {genres[0]}'
         embed = discord.Embed(title=f'Recommendation: {title}',
-                              description=f'Genre: {genre}\nTag: {tag}')
+                              description=f'{genre_description}\nTag: {tag}')
         embed.set_thumbnail(url=client.user.avatar.url)
         embed.add_field(name='Author', value=author, inline=True)
         embed.add_field(name='Link', value=link, inline=True)
@@ -153,7 +157,7 @@ async def process_track_list_message(message):
         curr_time = datetime.now(timezone.utc)
         diff = curr_time - message.created_at
         if diff.total_seconds() < 360:
-            embed = create_recommendation_embed(title, author, link, ' '.join(genres), tag)
+            embed = create_recommendation_embed(title, author, link, genres, tag)
             await message.channel.send(embed=embed)
 
     except Exception as e:
