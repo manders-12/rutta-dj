@@ -50,9 +50,9 @@ class GenreView(View):
             self.add_item(GenreButton(genre, db))
         # Add navigation buttons
         if self.page > 0:
-            self.add_item(PrevButton(db, self.page, GenreView(), "Select a genre:"))
+            self.add_item(PrevButton(db, self.page, GenreView, "Select a genre:"))
         if self.page < self.max_page:
-            self.add_item(NextButton(db, self.page, GenreView(), "Select a genre:"))
+            self.add_item(NextButton(db, self.page, GenreView, "Select a genre:"))
         self.add_item(BackButton(db, 1, RecommendationsStartView(db), "View Recommendations By:"))
 
 # class PrevGenreButton(Button):
