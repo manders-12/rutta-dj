@@ -6,6 +6,7 @@ from views.recommendations import RecommendationsStartView
 from config.config import Config
 from helpers.embeds import EmbedsHelper
 from helpers.messages import MessagesHelper
+from helpers.spotify import SpotifyHelper
 
 try:
     conf = Config()
@@ -16,7 +17,8 @@ try:
     vars = conf.get_vars()
 
     embedsHelper = EmbedsHelper(conf)
-    messagesHelper = MessagesHelper(conf, embedsHelper)
+    spotifyHelper = SpotifyHelper()
+    messagesHelper = MessagesHelper(conf, embedsHelper, spotifyHelper)
 
 except Exception as e:
     logging.error(f'Error initializing configuration: {e}')
