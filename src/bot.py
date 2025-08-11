@@ -128,6 +128,15 @@ async def process_track_list_message(message):
             logging.error(f'Invalid genre-tag format in message: {text}')
             return False
         genres = re.findall(r'<@&\d+>', genre_tag_line[0])
+        for i, genre in enumerate(genres):
+            role_id = re.search(r"<@&(\d+)>", genre)
+            role = message.guild.get_role(int(role_id.group(0)))
+            if role:
+                genres[i] = role.name
+            else:
+                logging.error(f'Role {role_id.group(0)} not found: {message.content}')
+                return False
+
         if not genres:
             genres = genre_tag_line[0].strip().split('/') if '/' in genre_tag_line[0] else genre_tag_line[0].strip().split('\\') if '\\' in genre_tag_line[0] else genre_tag_line[0].strip().split(' ')
         if len(genres) < 2:
