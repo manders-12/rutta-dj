@@ -53,7 +53,7 @@ class GenreView(View):
             self.add_item(PrevButton(db, self.page, GenreView, "Select a genre:"))
         if self.page < self.max_page:
             self.add_item(NextButton(db, self.page, GenreView, "Select a genre:"))
-        self.add_item(BackButton(db, 1, RecommendationsStartView(db), "View Recommendations By:"))
+        self.add_item(BackButton(db, 3, RecommendationsStartView(db), "View Recommendations By:"))
 
 # class PrevGenreButton(Button):
 #     def __init__(self, db, page):
