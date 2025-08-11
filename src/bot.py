@@ -129,12 +129,12 @@ async def process_track_list_message(message):
             return False
         genres = re.findall(r'<@&\d+>', genre_tag_line[0])
         for i, genre in enumerate(genres):
-            role_id = re.search(r"<@&(\d+)>", genre)
-            role = message.guild.get_role(int(role_id.group(0)))
+            role_id = re.findall(r"<@&(\d+)>", genre)
+            role = message.guild.get_role(int(role_id[0]))
             if role:
                 genres[i] = role.name
             else:
-                logging.error(f'Role {role_id.group(0)} not found: {message.content}')
+                logging.error(f'Role {role_id[0]} not found: {message.content}')
                 return False
 
         if not genres:
