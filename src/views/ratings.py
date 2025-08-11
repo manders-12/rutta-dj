@@ -24,7 +24,7 @@ def _build_embed_tables(results):
         embed.add_field(
             name=result['track_name'],
             value=
-            f"Rating: {result['rating']}\nReview: {result['review']}\nRecommended By: {result['recommended_by']}",
+            f"Rating: {result['rating']}\nReview: {result['review']}\n{result['link']}\nRecommended By: {result['recommended_by']}",
             inline=False)
     if embed.fields:
         embeds.append(embed)
