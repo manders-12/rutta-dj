@@ -108,7 +108,7 @@ class TagView(View):
         self.db = db
         tags = db.get_all_tags()
         for i, tag in enumerate(tags):
-            self.add_item(TagButton(tag, db, 0))
+            self.add_item(TagButton(tag, db))
         self.add_item(BackButton(db, 1, RecommendationsStartView(db), "View Recommendations By:"))
 
 class TagButton(Button):
