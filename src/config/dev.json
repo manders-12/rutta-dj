@@ -1,5 +1,6 @@
 {
     "track_list_channel": "test-track-list",
     "music_review_channel": "test-music-review",
-    "controlling_user": "longliveHIM"
+    "controlling_user": "longliveHIM",
+    "db_path": "db/rutta-dj-dev.sqlite3"
 }
