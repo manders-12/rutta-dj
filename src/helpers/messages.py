@@ -19,9 +19,9 @@ class MessagesHelper:
         if str(message.author.global_name).lower() != self.vars['CONTROLLING_USER']:
             return False
         
-        if message.channel.name == vars['TRACK_LIST_CHANNEL']:
+        if message.channel.name == self.vars['TRACK_LIST_CHANNEL']:
             return await self._process_track_list_message(message)
-        elif message.channel.name == vars['MUSIC_REVIEW_CHANNEL']:
+        elif message.channel.name == self.vars['MUSIC_REVIEW_CHANNEL']:
             return await self._process_music_review_message(message)
         
     async def _process_track_list_message(self, message): 
