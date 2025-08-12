@@ -45,7 +45,7 @@ class EmbedsHelper:
             embed.set_footer(text='Rutta DJ Bot')
         return embed
     
-    def parse_embed(embed):
+    def parse_embed(self, embed):
         try:
             title = embed.title if embed.title else ''
             author = embed.author.name if embed.author else embed.footer.text if embed.footer else embed.description if embed.description else embed.fields[0].value if embed.fields else ''
