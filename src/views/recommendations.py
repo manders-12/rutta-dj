@@ -1,8 +1,8 @@
 import discord
 from discord.ui import View, Button
-from components.BackButton import BackButton
-from components.PrevButton import PrevButton
-from components.NextButton import NextButton
+from views.components.BackButton import BackButton
+from views.components.PrevButton import PrevButton
+from views.components.NextButton import NextButton
 import logging
 
 logger = logging.getLogger(__name__)

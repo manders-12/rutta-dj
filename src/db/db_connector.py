@@ -121,6 +121,15 @@ class DBConnector:
         conn = self.connect()
         cursor = conn.cursor()
         cursor.execute('''
-            SELECT DISTINCT tag FROM recommendations
+            SELECT DISTINCT tag COLLATE NOCASE FROM recommendations
         ''')
         return [row['tag'] for row in cursor.fetchall()]
+    
+    def get_scores_by_user(self):
+        conn = self.connect()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT recommended_by COLLATE NOCASE, SUM(rating) as total, AVG(rating) as average FROM ratings GROUP BY recommended_by
+        ''')
+        return cursor.fetchall()
+    

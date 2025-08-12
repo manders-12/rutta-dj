@@ -1,6 +1,6 @@
 import discord
 from discord.ui import View, Button
-from components.BackButton import BackButton
+from views.components.BackButton import BackButton
 
 
 def _build_embed_table(results, j = 0, embed=None):

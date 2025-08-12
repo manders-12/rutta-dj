@@ -5,6 +5,7 @@ from datetime import datetime, timezone, timedelta
 from config.config import Config
 from helpers.embeds import EmbedsHelper
 from helpers.spotify import SpotifyHelper
+import inflect
 
 class MessagesHelper:
     def __init__(self, config : Config, embedsHelper : EmbedsHelper, spotifyHelper : SpotifyHelper):
@@ -75,6 +76,9 @@ class MessagesHelper:
                 logging.error(f'Missing author in replied message: {message.content}') 
                 return False
             
+            p = inflect.engine()
+            
+            tag = p.singular_noun(tag)
             self.db.insert_recommendation(message.id, author, title, link, genres, tag)
             logging.info(f'Recommendation inserted: {title} by {author} ({link}) with genres {genres} and tag {tag}')
             curr_time = datetime.now(timezone.utc)
