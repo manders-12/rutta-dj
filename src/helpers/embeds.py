@@ -1,10 +1,14 @@
 import logging
 import discord
+import re
+from helpers.spotify import SpotifyHelper
+from config.config import Config
 
 class EmbedsHelper:
-    def __init__(self, config):
+    def __init__(self, config : Config, spotifyHelper: SpotifyHelper):
         self.config = config
         self.client = config.get_client()
+        self.spotifyHelper = spotifyHelper
         self.logger = logging.getLogger(__name__)
 
     def create_rating_embed(self, title, author, link, rating, explanation):
@@ -47,11 +51,15 @@ class EmbedsHelper:
     
     def parse_embed(self, embed):
         try:
+            link = embed.url if hasattr(embed, 'url') else None
+            spotify_match = re.search(r'spotify\.com/(track|album)/([a-zA-Z0-9]+)', link)
+            if spotify_match:
+                title = self.spotifyHelper.get_artist_from_spotify_link(link)
+            else:
+                author = embed.author.name if embed.author else ''
             title = embed.title if embed.title else ''
-            author = embed.author.name if embed.author else embed.footer.text if embed.footer else embed.description if embed.description else embed.fields[0].value if embed.fields else ''
             if author.endswith(' - Topic'):
                 author = author.rstrip(' - Topic')
-            link = embed.url if hasattr(embed, 'url') else None
         except Exception as e:
             logging.error(f'Error parsing embed: {e}')
             title, author, link = None, None, None

@@ -16,9 +16,10 @@ try:
     db = conf.get_db()
     vars = conf.get_vars()
 
-    embedsHelper = EmbedsHelper(conf)
+    
     spotifyHelper = SpotifyHelper()
-    messagesHelper = MessagesHelper(conf, embedsHelper, spotifyHelper)
+    embedsHelper = EmbedsHelper(conf, spotifyHelper)
+    messagesHelper = MessagesHelper(conf, embedsHelper)
 
 except Exception as e:
     logging.error(f'Error initializing configuration: {e}')

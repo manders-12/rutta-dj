@@ -4,14 +4,12 @@ import time
 from datetime import datetime, timezone, timedelta
 from config.config import Config
 from helpers.embeds import EmbedsHelper
-from helpers.spotify import SpotifyHelper
 import inflect
 
 class MessagesHelper:
-    def __init__(self, config : Config, embedsHelper : EmbedsHelper, spotifyHelper : SpotifyHelper):
+    def __init__(self, config : Config, embedsHelper : EmbedsHelper):
         self.config = config
         self.embedsHelper = embedsHelper
-        self.spotifyHelper = spotifyHelper
         self.db = config.get_db()
         self.vars = config.get_vars()
     
@@ -64,23 +62,19 @@ class MessagesHelper:
             else:
                 logging.error(f'Message {message.content} does not contain an embed.')
                 return False
-            if not title:
-                logging.error(f'Missing title in replied message: {message.content}')
-                return False
-            if not link:
-                logging.error(f'Missing link in replied message: {message.content}')
-                return False
-            if not author:
-                author = self.spotifyHelper.get_artist_from_spotify_link(link)
-            if not author:
-                logging.error(f'Missing author in replied message: {message.content}') 
+            if not title or not link or not author:
+                logging.error(f'Missing track details in replied message: {message.content}')
                 return False
             
+            #Make the tag singular (Fresh Picks -> Fresh Pick)
             p = inflect.engine()
-            
             tag = p.singular_noun(tag)
+
+            #Insert into DB
             self.db.insert_recommendation(message.id, author, title, link, genres, tag)
             logging.info(f'Recommendation inserted: {title} by {author} ({link}) with genres {genres} and tag {tag}')
+
+            #Only send confirmation message if processed message is newer than 5 minutes (prevents process command from spamming)
             curr_time = datetime.now(timezone.utc)
             diff = curr_time - message.created_at
             if diff.total_seconds() < 360:
@@ -106,16 +100,8 @@ class MessagesHelper:
                 return False
             embed = replied_message.embeds[0]
             title, author, link = self.embedsHelper.parse_embed(embed)
-            if not title:
-                logging.error(f'Missing title in replied message: {replied_message.content}')
-                return False
-            if not link:
-                logging.error(f'Missing link in replied message: {replied_message.content}')
-                return False
-            if not author:
-                author = self.spotifyHelper.get_artist_from_spotify_link(link)
-            if not author:
-                logging.error(f'Missing author in replied message: {replied_message.content}')
+            if not title or not link or not author:
+                logging.error(f'Missing track details in replied message: {replied_message.content}')
                 return False
             
             # Check if we're looking at an album or a track
