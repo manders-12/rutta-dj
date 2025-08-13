@@ -22,10 +22,10 @@ class Config:
     def _load_config(self):
         if self.environment.lower() == 'production':
             self.logger.info('Running in production mode')
-            vars = json.load(open('../prod.json'))
+            vars = json.load(open('prod.json'))
         else:
             self.logger.info('Running in development mode')
-            vars = json.load(open('../dev.json'))
+            vars = json.load(open('dev.json'))
 
         # Set up configuration variables
         self.TRACK_LIST_CHANNEL = vars.get('track_list_channel')
