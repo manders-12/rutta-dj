@@ -4,11 +4,14 @@ import discord
 import json
 from discord.ext import commands
 from db.db_connector import DBConnector
+from dotenv import load_dotenv
+
 
 
 class Config:
     def __init__(self):
         # Load environment variables - don't forget to configure .env for production
+        load_dotenv()
         self.environment = os.environ.get('ENVIRONMENT', 'development')
 
     def _setup_logging(self):
