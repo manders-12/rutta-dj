@@ -54,7 +54,7 @@ class EmbedsHelper:
             link = embed.url if hasattr(embed, 'url') else None
             spotify_match = re.search(r'spotify\.com/(track|album)/([a-zA-Z0-9]+)', link)
             if spotify_match:
-                title = self.spotifyHelper.get_artist_from_spotify_link(link)
+                author = self.spotifyHelper.get_artist_from_spotify_link(link)
             else:
                 author = embed.author.name if embed.author else ''
             title = embed.title if embed.title else ''
