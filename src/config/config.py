@@ -21,11 +21,15 @@ class Config:
 
     def _load_config(self):
         if self.environment.lower() == 'production':
+            here = os.path.dirname(os.path.abspath(__file__))  # directory of config.py
+            json_path = os.path.join(here, "prod.json")
             self.logger.info('Running in production mode')
-            vars = json.load(open('prod.json'))
+            vars = json.load(open(json_path))
         else:
+            here = os.path.dirname(os.path.abspath(__file__))  # directory of config.py
+            json_path = os.path.join(here, "dev.json")
             self.logger.info('Running in development mode')
-            vars = json.load(open('dev.json'))
+            vars = json.load(open(json_path))
 
         # Set up configuration variables
         self.TRACK_LIST_CHANNEL = vars.get('track_list_channel')
